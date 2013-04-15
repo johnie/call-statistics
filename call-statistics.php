@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Call Statistics
- * Plugin URI: http://URI_Of_Page_Describing_Plugin_and_Updates
+ * Plugin URI: https://github.com/zhangxiao/call-statistics
  * Description: Collect calls information. 
  * Version: 1.0
  * Author: x1a0
