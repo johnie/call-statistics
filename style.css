@@ -357,6 +357,8 @@ textarea,
 }
 textarea {
   height: auto;
+  width: 100%;
+  min-height: 100px;
 }
 textarea,
 input[type="text"],
