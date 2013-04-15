@@ -39,7 +39,7 @@ if (!class_exists("Call_Stats")) {
             add_action("wp_enqueue_scripts", array($this, "onWpEnqueueScripts"));
 
             // for debug
-            add_action("activated_plugin", array($this, "onActivatedPlugin"));
+            //add_action("activated_plugin", array($this, "onActivatedPlugin"));
         }
 
         /* Event Handlers */
