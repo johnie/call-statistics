@@ -28,7 +28,7 @@ get_header(); ?>
                 echo $call_statistics->getStatsHTML();
             ?>
         <?php else: ?>
-        <form action="" method="post">
+        <form id="add-call" action="" method="post"><fieldset>
             <!-- personal id -->
             <div>
                 <label for="call-personal-id">Fyll i din personliga identifieringskod: <span class="required">*</span></label>
@@ -83,15 +83,12 @@ get_header(); ?>
 
             <!-- topic -->
             <div>
-                <label>Samtalsämne:</label>
-                <ul>
+                <span>Samtalsämne:</span>
                 <?php foreach (get_option("call-statistics_topic_options") as $index => $option): ?>
-                    <li>
-                        <input id="call-topic-<?php print $index; ?>" type="checkbox" name="topic[]" value="<?php print $option; ?>">
-                        <label for="call-topic-<?php print $index; ?>"><?php print $option; ?></label>
-                    </li>
+                <label for="call-topic-<?php print $index; ?>">
+                    <input id="call-topic-<?php print $index; ?>" type="checkbox" name="topic[]" value="<?php print $option; ?>"> <?php print $option; ?>
+                </label>
                 <?php endforeach; ?>
-                </ul>
             </div>
 
             <!-- other category -->
@@ -120,8 +117,8 @@ get_header(); ?>
 
             <input name="call_statistics_post" type="hidden" value="1">
 
-            <input type="submit" value="Submit">
-        </form>
+            <input type="submit" value="Submit" class="btn btn-primary">
+        </fieldset></form>
         <?php endif; ?>
 
     </div><!-- #content -->

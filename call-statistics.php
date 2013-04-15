@@ -36,6 +36,7 @@ if (!class_exists("Call_Stats")) {
             register_deactivation_hook(__FILE__, array($this, "onDeactivate"));
             //register_uninstall_hook   (__FILE__, array($this, "onUninstall"));
             add_action("init", array($this, "onInit"));
+            add_action("wp_enqueue_scripts", array($this, "onWpEnqueueScripts"));
 
             // for debug
             add_action("activated_plugin", array($this, "onActivatedPlugin"));
@@ -95,16 +96,16 @@ if (!class_exists("Call_Stats")) {
             global $wpdb;
 
             $rows_affected = $wpdb->insert($this->calls_table_name, array(
-                "personal_id"    => $_POST["personal_id"],
-                "platform"       => $_POST["platform"],
-                "type"           => $_POST["type"],
-                "minutes"        => $_POST["minutes"],
-                "gender"         => $_POST["gender"],
-                "spouse"         => $_POST["spouse"],
-                "other_category" => $_POST["other_category"],
-                "reference"      => $_POST["reference"],
-                "report"         => $_POST["report"],
-                "response"       => $_POST["response"],
+                "personal_id"    => sanitize_text_field($_POST["personal_id"]),
+                "platform"       => sanitize_text_field($_POST["platform"]),
+                "type"           => sanitize_text_field($_POST["type"]),
+                "minutes"        => sanitize_text_field($_POST["minutes"]),
+                "gender"         => sanitize_text_field($_POST["gender"]),
+                "spouse"         => sanitize_text_field($_POST["spouse"]),
+                "other_category" => sanitize_text_field($_POST["other_category"]),
+                "reference"      => sanitize_text_field($_POST["reference"]),
+                "report"         => sanitize_text_field($_POST["report"]),
+                "response"       => sanitize_text_field($_POST["response"]),
                 "created"        => time(),
             ));
 
@@ -113,11 +114,20 @@ if (!class_exists("Call_Stats")) {
                 foreach ($_POST["topic"] as $topic) {
                     $wpdb->insert($this->call_topic_table_name, array(
                         "call_id" => $call_id,
-                        "topic" => $topic,
+                        "topic" => sanitize_text_field($topic),
                     ));
                 }
             }
         }
+
+        public function onWpEnqueueScripts() {
+            // Respects SSL, Style.css is relative to the current file
+            $name = $this->_name . "-style";
+            wp_register_style($name, plugins_url('style.css', __FILE__));
+            wp_enqueue_style($name);
+        }
+
+        /* end of event handlers */
 
         /**
          * For debug.
@@ -152,6 +162,15 @@ if (!class_exists("Call_Stats")) {
                 $output .= $this->getTableHTML($header, $rows);
             }
 
+            $sql = "SELECT topic, count(1) AS total FROM $this->call_topic_table_name GROUP BY topic";
+            $result = $wpdb->get_results($sql);
+            $header = array("Samtalsämne", "#");
+            $rows = array();
+            foreach ($result as $item) {
+                $rows[] = array($item->topic, $item->total);
+            }
+            $output .= $this->getTableHTML($header, $rows);
+
             return $output;
         }
 
@@ -159,18 +178,22 @@ if (!class_exists("Call_Stats")) {
          * Helper for generate table.
          */
         private function getTableHTML($header, $rows, $title = "") {
-            $output = '<table style="width: 100%; margin: 20px 0">';
+            $output = '<table class="stats table table-striped table-hover">';
 
             $output .= '<tr>';
+            $col = 0;
             foreach ($header as $item) {
-                $output .= '<th>' . $item . '</th>';
+                $output .= '<th class="col-' . $col++ . '">' . $item . '</th>';
             }
             $output .= '</tr>';
 
+            $odd_even = array("odd", "even");
+            $count = 0;
             foreach ($rows as $row) {
-                $output .= '<tr>';
+                $output .= '<tr class="' . $odd_even[$count++ % 2] . '">';
+                $col = 0;
                 foreach ($row as $item) {
-                    $output .= '<td>' . $item . '</td>';
+                    $output .= '<td class="col-' . $col++ . '">' . $item . '</td>';
                 }
                 $output .= '</tr>';
             }
