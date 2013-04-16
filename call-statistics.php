@@ -10,8 +10,8 @@
 ?>
 <?php
 
-include_once __DIR__ . '/options.php';
-include_once __DIR__ . '/view.php';
+include_once(plugin_dir_path(__FILE__) . 'options.php');
+include_once(plugin_dir_path(__FILE__) . 'view.php');
 
 if (!class_exists('Call_Stats')) {
 
