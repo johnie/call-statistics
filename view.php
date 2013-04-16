@@ -28,19 +28,23 @@ class Call_Stats_View {
         $html .= $this->getTextfield('personal_id', 'Fyll i din personliga identifieringskod:', TRUE);
 
         // platform
-        $html .= $this->getSelect('platform', 'Plattform:', get_option($this->setup->_name . '_platform_options'), TRUE);
+        $options = get_option($this->setup->_name . '_platform_options');
+        $html .= $this->getSelect('platform', 'Plattform:', array_combine($options, $options), TRUE);
 
         // type
-        $html .= $this->getSelect('type', 'Typ av samtal:', get_option($this->setup->_name . '_type_options'), TRUE);
+        $options = get_option($this->setup->_name . '_type_options');
+        $html .= $this->getSelect('type', 'Typ av samtal:', array_combine($options, $options), TRUE);
 
         // minutes
         $html .= $this->getTextfield('minutes', 'Samtalstid i minuter:');
 
         // gender 
-        $html .= $this->getSelect('gender', 'Kön:', get_option($this->setup->_name . '_gender_options'));
+        $options = get_option($this->setup->_name . '_gender_options');
+        $html .= $this->getSelect('gender', 'Kön:', array_combine($options, $options));
 
-        // spouse
-        $html .= $this->getSelect('spouse', 'Åldersgrupp:', get_option($this->setup->_name . '_spouse_options'));
+        // age
+        $options = get_option($this->setup->_name . '_age_options');
+        $html .= $this->getSelect('age', 'Åldersgrupp:', array_combine($options, $options));
 
         // topic
         $html .= $this->getCheckboxes('topic', 'Samtalsämne:', get_option($this->setup->_name . '_topic_options'));
@@ -65,8 +69,8 @@ class Call_Stats_View {
     }
 
     public function getListHTML() {
-        $cur_year = date('Y');
-        $cur_month = date('m');
+        $cur_year = intval(date('Y'));
+        $cur_month = intval(date('m'));
 
         $query_year = isset($_GET['year']) ? $_GET['year'] : $cur_year;
         $query_month = isset($_GET['month']) ? $_GET['month'] : $cur_month;
@@ -81,7 +85,7 @@ class Call_Stats_View {
                 $call->type,
                 $call->minutes,
                 $call->gender,
-                $call->spouse,
+                $call->age,
                 $call->topics,
                 $call->other_category,
                 $call->reference,
@@ -146,37 +150,103 @@ class Call_Stats_View {
      * Generate statistics page.
      */
     public function getStatsHTML() {
-        $html = "";
         global $wpdb;
 
-        $sql = "SELECT topic, count(1) AS total FROM {$this->setup->call_topic_table_name} GROUP BY topic";
-        $result = $wpdb->get_results($sql);
-        $header = array("Samtalsämne", "#");
-        $rows = array();
-        foreach ($result as $item) {
-            $rows[] = array($item->topic, $item->total);
-        }
-        $html .= $this->getTableHTML($header, $rows);
-
-        $stats_types = array(
-            "personal_id" => "Personliga Identifieringskod",
-            "platform" => "Plattform",
-            "type" => "Typ av samtal",
-            "gender" => "Kön",
-            "spouse" => "Åldersgrupp",
-            "DATE_FORMAT(created, '%Y-%m')" => "Year-month",
+        $options = array(
+            'platform' => get_option($this->setup->_name . '_platform_options'),
+            'type'     => get_option($this->setup->_name . '_type_options'),
+            'gender'   => get_option($this->setup->_name . '_gender_options'),
+            'age'      => get_option($this->setup->_name . '_age_options'),
         );
 
-        foreach ($stats_types as $field => $display) {
-            $sql = "SELECT $field, count(1) AS total FROM {$this->setup->calls_table_name} GROUP BY $field";
-            $result = $wpdb->get_results($sql);
-            $header = array($display, "#");
+        $group_by = isset($_POST['group_by']) && in_array($_POST['group_by'], array('platform', 'type', 'gender', 'age')) ? $_POST['group_by'] : FALSE;
+
+        $selects = array('COUNT(1) AS total');
+        if ($group_by) $selects[] = $group_by;
+
+        $wheres = array();
+        $fields = array('platform', 'type', 'gender', 'age');
+        foreach ($fields as $field) {
+            if (isset($_POST[$field]) && !empty($_POST[$field])) {
+                // if all checked, no need to set as condition
+                if (count($_POST[$field]) >= count($options[$field])) continue;
+
+                $values = array();
+                foreach ($_POST[$field] as $value) {
+                    $values[] = '"' . sanitize_text_field($value) . '"';
+                }
+
+                if (count($_POST[$field]) > 1) {
+                    $wheres[] = $field . ' IN (' . implode(', ', $values) . ')';
+                }
+                else {
+                    $wheres[] = $field . ' = ' . $values[0];
+                }
+            }
+        }
+
+        $sql = 'SELECT ' . implode(', ', $selects) . ' FROM ' . $this->setup->calls_table_name;
+        if (!empty($wheres)) {
+            $sql .= ' WHERE ' . implode(' AND ', $wheres);
+        }
+        if ($group_by) {
+            $sql .= " GROUP BY $group_by";
+        }
+
+        $result = $wpdb->get_results($sql);
+
+        $html = '';
+
+        if ($group_by) {
+            $display = array(
+                "platform" => "Plattform",
+                "type" => "Typ av samtal",
+                "gender" => "Kön",
+                "age" => "Åldersgrupp",
+            );
+            $header = array($display[$group_by], "#");
             $rows = array();
             foreach ($result as $item) {
-                $rows[] = array($item->{$field}, $item->total);
+                $rows[] = array($item->$group_by, $item->total);
             }
             $html .= $this->getTableHTML($header, $rows);
         }
+        else {
+            $html .= '<div class="alert alert-success">Found ' .  $result[0]->total . ' call(s).</div>';
+        }
+
+        $html .= $this->getStatsPanel();
+
+        return $html;
+    }
+
+    /**
+     * return stats form.
+     */
+    private function getStatsPanel() {
+        $html = '';
+        $html .= '<form method="post" action="">';
+
+        $html .= '<fieldset><legend>Filters:</legend>';
+        $html .= $this->getCheckboxes('platform', 'Plattform:', get_option($this->setup->_name . '_platform_options'), FALSE, TRUE);
+        $html .= $this->getCheckboxes('type', 'Typ av samtal:', get_option($this->setup->_name . '_type_options'), FALSE, TRUE);
+        $html .= $this->getCheckboxes('gender', 'Kön:', get_option($this->setup->_name . '_gender_options'), FALSE, TRUE);
+        $html .= $this->getCheckboxes('age', 'Åldersgrupp:', get_option($this->setup->_name . '_age_options'), FALSE, TRUE);
+        $html .= '</fieldset>';
+
+        $html .= '<fieldset><legend>Group:</legend>';
+        $html .= $this->getSelect('group_by', 'Group By:', array(
+            '_none_'   => '- None -',
+            'platform' => 'Plattform',
+            'type'     => 'Typ av samtal',
+            'gender'   => 'Kön',
+            'age'      => 'Åldersgrupp',
+        ));
+        $html .= '</fieldset>';
+
+        $html .= '<input class="btn btn-primary" type="submit" value="submit">';
+
+        $html .= '</form>';
 
         return $html;
     }
@@ -185,16 +255,16 @@ class Call_Stats_View {
         $html = '';
         $id = "call-" . str_replace('_', '-', $name);
         $html .= '<label for="' . $id . '">' . $label . ($required ? '<span class="required">*</span>' : '') . '</label>';
-        $html .= '<input id="' . $id . '" type="text" name="' . $name . '" value="' . (isset($_POST[$name]) ? $_POST[$name] : '') . '">';
-        return '<div>' . $html . '</div>';
+        $html .= '<input id="' . $id . '" type="text" name="' . $name . '" value="' . (isset($_REQUEST[$name]) ? $_REQUEST[$name] : '') . '">';
+        return $html;
     }
 
     private function getTextarea($name, $label, $required = FALSE) {
         $html = '';
         $id = "call-" . str_replace('_', '-', $name);
         $html .= '<label for="' . $id . '">' . $label . ($required ? '<span class="required">*</span>' : '') . '</label>';
-        $html .= '<div><textarea id="' . $id . '" name="' . $name .'">' . (isset($_POST[$name]) ? $_POST[$name] : '') . '</textarea></div>';
-        return '<div>' . $html . '</div>';
+        $html .= '<div><textarea id="' . $id . '" name="' . $name .'">' . (isset($_REQUEST[$name]) ? $_REQUEST[$name] : '') . '</textarea></div>';
+        return $html;
     }
 
     private function getSelect($name, $label, $options, $required = FALSE) {
@@ -202,23 +272,23 @@ class Call_Stats_View {
         $id = "call-" . str_replace('_', '-', $name);
         $html .= '<label for="' . $id . '">' . $label . ($required ? '<span class="required">*</span>' : '') . '</label>';
         $html .= '<select id="' . $id . '" name="' . $name .'">';
-        foreach ($options as $option) {
-            $html .= '<option value="' . $option . '" ' . selected(isset($_POST[$name]) ? $_POST[$name] : '', $option, TRUE) . '>' . $option . '</option>';
+        foreach ($options as $value => $display) {
+            $html .= '<option value="' . $value. '" ' . selected(isset($_REQUEST[$name]) ? $_REQUEST[$name] : '', $value, FALSE) . '>' . $display. '</option>';
         }
         $html .= '</select>';
-        return '<div>' . $html . '</div>';
+        return $html;
     }
 
-    private function getCheckboxes($name, $label, $options, $required = FALSE) {
+    private function getCheckboxes($name, $label, $options, $required = FALSE, $inline = FALSE) {
         $html = '';
         $id = "call-" . str_replace('_', '-', $name);
-        $html .= '<span>' . $label . '</span>' . ($required ? '<span class="required">*</span>' : '');
+        $html .= '<div>' . $label . ($required ? '<span class="required">*</span>' : '') . '</div>';
         foreach ($options as $index => $option) {
-            $html .= '<label for="' . $id . '-' . $index . '">';
-            $html .= '<input id="' . $id . '-' . $index . '" type="checkbox" name="' . $name . '[]" value="' . $option . '" ' . ((isset($_POST[$name]) && in_array($option, $_POST[$name])) ? 'checked="checked"' : '') . '> ' . $option;
+            $html .= '<label for="' . $id . '-' . $index . '" class="checkbox' . ($inline ? ' inline' : '') . '">';
+            $html .= '<input id="' . $id . '-' . $index . '" type="checkbox" name="' . $name . '[]" value="' . $option . '" ' . ((isset($_REQUEST[$name]) && in_array($option, $_REQUEST[$name])) ? 'checked="checked"' : '') . '> ' . $option;
             $html .= '</label>';
         }
-        return '<div>' . $html . '</div>';
+        return $html;
     }
 
     /**

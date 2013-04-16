@@ -161,7 +161,7 @@ if (!class_exists('Call_Stats')) {
                 'type'           => sanitize_text_field($_POST['type']),
                 'minutes'        => sanitize_text_field(intval($_POST['minutes'])),
                 'gender'         => sanitize_text_field($_POST['gender']),
-                'spouse'         => sanitize_text_field($_POST['spouse']),
+                'age'         => sanitize_text_field($_POST['age']),
                 'other_category' => sanitize_text_field($_POST['other_category']),
                 'reference'      => sanitize_text_field($_POST['reference']),
                 'report'         => sanitize_text_field($_POST['report']),
@@ -266,7 +266,7 @@ if (!class_exists('Call_Stats')) {
             add_option($this->_name . '_platform_options', array('Telefon', 'Chatt'));
             add_option($this->_name . '_type_options', array('Seriöst samtal', 'Vaneringare/Vanechattare', 'Jourmissbrukare', 'Test/Klick'));
             add_option($this->_name . '_gender_options', array('Tjej', 'Kille', 'Vet ej'));
-            add_option($this->_name . '_spouse_options', array('0-6 år', '7-13 år (Grundskola åk 1-6)', '14-16 år (Grundskola åk 7-9)', '17-19 år (Gymnasiet)', '20-25 år'));
+            add_option($this->_name . '_age_options', array('0-6 år', '7-13 år (Grundskola åk 1-6)', '14-16 år (Grundskola åk 7-9)', '17-19 år (Gymnasiet)', '20-25 år'));
         }
 
         private function clearOptions() {
@@ -291,7 +291,7 @@ if (!class_exists('Call_Stats')) {
                 type VARCHAR(32),
                 minutes SMALLINT(5),
                 gender VARCHAR(32),
-                spouse VARCHAR(64),
+                age VARCHAR(64),
                 other_category TEXT,
                 reference VARCHAR(255),
                 report TEXT,
