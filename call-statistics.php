@@ -13,6 +13,8 @@
 if (!class_exists("Call_Stats")) {
 
     class Call_Stats {
+        private static $messages;
+
         public $_name;
         public $page_title;
         public $page_name;
@@ -22,6 +24,8 @@ if (!class_exists("Call_Stats")) {
         public $call_topic_table_name;
 
         public function __construct() {
+            self::$messages = array();
+
             global $wpdb;
 
             $this->_name = "call-statistics";
@@ -40,6 +44,14 @@ if (!class_exists("Call_Stats")) {
 
             // for debug
             //add_action("activated_plugin", array($this, "onActivatedPlugin"));
+        }
+
+        public static function addMessage($message, $level = "info") {
+            self::$messages[$level][] = $message;
+        }
+
+        public static function getMessages() {
+            return self::$messages;
         }
 
         /* Event Handlers */
@@ -93,22 +105,11 @@ if (!class_exists("Call_Stats")) {
                 return;
             }
 
+            $call = $this->validateCallData();
+            if ($call === FALSE) return;
+
             global $wpdb;
-
-            $rows_affected = $wpdb->insert($this->calls_table_name, array(
-                "personal_id"    => sanitize_text_field($_POST["personal_id"]),
-                "platform"       => sanitize_text_field($_POST["platform"]),
-                "type"           => sanitize_text_field($_POST["type"]),
-                "minutes"        => sanitize_text_field($_POST["minutes"]),
-                "gender"         => sanitize_text_field($_POST["gender"]),
-                "spouse"         => sanitize_text_field($_POST["spouse"]),
-                "other_category" => sanitize_text_field($_POST["other_category"]),
-                "reference"      => sanitize_text_field($_POST["reference"]),
-                "report"         => sanitize_text_field($_POST["report"]),
-                "response"       => sanitize_text_field($_POST["response"]),
-                "created"        => time(),
-            ));
-
+            $rows_affected = $wpdb->insert($this->calls_table_name, $call);
             if (isset($_POST["topic"]) && is_array($_POST["topic"])) {
                 $call_id = $wpdb->insert_id;
                 foreach ($_POST["topic"] as $topic) {
@@ -118,6 +119,7 @@ if (!class_exists("Call_Stats")) {
                     ));
                 }
             }
+            self::addMessage("Thanks! Call record is saved.", "success");
         }
 
         public function onWpEnqueueScripts() {
@@ -172,6 +174,43 @@ if (!class_exists("Call_Stats")) {
             $output .= $this->getTableHTML($header, $rows);
 
             return $output;
+        }
+
+        /**
+         * Validate data in $_POST and return sanitized data.
+         */
+        private function validateCallData() {
+            $call = array(
+                "personal_id"    => sanitize_text_field($_POST["personal_id"]),
+                "platform"       => sanitize_text_field($_POST["platform"]),
+                "type"           => sanitize_text_field($_POST["type"]),
+                "minutes"        => sanitize_text_field(intval($_POST["minutes"])),
+                "gender"         => sanitize_text_field($_POST["gender"]),
+                "spouse"         => sanitize_text_field($_POST["spouse"]),
+                "other_category" => sanitize_text_field($_POST["other_category"]),
+                "reference"      => sanitize_text_field($_POST["reference"]),
+                "report"         => sanitize_text_field($_POST["report"]),
+                "response"       => sanitize_text_field($_POST["response"]),
+            );
+
+            $relative_fields = array_keys($call);
+            $relative_fields[] = "topic";
+
+            $invalid = FALSE;
+            if (empty($call["personal_id"])) {
+                self::addMessage("Please fill personliga identifieringskod", "error");
+                $invalid = TRUE;
+            }
+
+            if ($invalid) return FALSE;
+
+            // unset relative $_POST values
+            foreach ($relative_fields as $field) {
+                unset($_POST[$field]);
+            }
+
+            $call["created"] = time();
+            return $call;
         }
 
         /**
@@ -305,7 +344,6 @@ if (!class_exists("Call_Stats")) {
                 minutes SMALLINT(5),
                 gender VARCHAR(32),
                 spouse VARCHAR(64),
-                topic TEXT,
                 other_category TEXT,
                 reference VARCHAR(255),
                 report TEXT,
