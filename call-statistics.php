@@ -10,7 +10,10 @@
 ?>
 <?php
 
-if (!class_exists("Call_Stats")) {
+include_once __DIR__ . '/options.php';
+include_once __DIR__ . '/template.php';
+
+if (!class_exists('Call_Stats')) {
 
     class Call_Stats {
         private static $messages;
@@ -23,30 +26,36 @@ if (!class_exists("Call_Stats")) {
         public $calls_table_name;
         public $call_topic_table_name;
 
+        public $template;
+        public $wp_options;
+
         public function __construct() {
             self::$messages = array();
 
             global $wpdb;
 
-            $this->_name = "call-statistics";
-            $this->page_title = "Call Statistics";
-            $this->page_name = $this->_name;
-            $this->page_id = get_option("{$this->_name}_page_id");
-            $this->template_file_name = "page-{$this->_name}.php";
-            $this->calls_table_name = $wpdb->prefix . "cs_calls";
-            $this->call_topic_table_name = $wpdb->prefix . "cs_call_topic";
+            $this->_name                 = 'call_statistics';
+            $this->page_title            = 'Call Statistics';
+            $this->page_name             = str_replace($this->_name, '_', '-');
+            $this->page_id               = get_option($this->_name . '_page_id');
+            $this->template_file_name    = 'page-' . $this->page_name . '.php';
+            $this->calls_table_name      = $wpdb->prefix . 'cs_calls';
+            $this->call_topic_table_name = $wpdb->prefix . 'cs_call_topic';
 
-            register_activation_hook  (__FILE__, array($this, "onActivate"));
-            register_deactivation_hook(__FILE__, array($this, "onDeactivate"));
-            //register_uninstall_hook   (__FILE__, array($this, "onUninstall"));
-            add_action("init", array($this, "onInit"));
-            add_action("wp_enqueue_scripts", array($this, "onWpEnqueueScripts"));
+            $this->template = new Call_Stats_Template($this);
+            $this->tp_options = new Call_Stats_Options($this);
+
+            register_activation_hook  (__FILE__, array($this, 'onActivate'));
+            register_deactivation_hook(__FILE__, array($this, 'onDeactivate'));
+            //register_uninstall_hook   (__FILE__, array($this, 'onUninstall'));
+            add_action('init', array($this, 'onInit'));
+            add_action('wp_enqueue_scripts', array($this, 'onWpEnqueueScripts'));
 
             // for debug
-            //add_action("activated_plugin", array($this, "onActivatedPlugin"));
+            //add_action('activated_plugin', array($this, 'onActivatedPlugin'));
         }
 
-        public static function addMessage($message, $level = "info") {
+        public static function addMessage($message, $level = 'info') {
             self::$messages[$level][] = $message;
         }
 
@@ -62,14 +71,14 @@ if (!class_exists("Call_Stats")) {
 
             if (!$the_page) {
                 $_p = array(
-                    "post_title"     => $this->page_title,
-                    "post_name"      => $this->page_name,
-                    "post_content"   => "",
-                    "post_status"    => "publish",
-                    "post_type"      => "page",
-                    "comment_status" => "closed",
-                    "ping_status"    => "closed",
-                    "post_category"  => array(1), // the default "Uncatrgorised"
+                    'post_title'     => $this->page_title,
+                    'post_name'      => $this->page_name,
+                    'post_content'   => '',
+                    'post_status'    => 'publish',
+                    'post_type'      => 'page',
+                    'comment_status' => 'closed',
+                    'ping_status'    => 'closed',
+                    'post_category'  => array(1), // the default 'Uncatrgorised'
                 );
 
                 $this->page_id = wp_insert_post($_p);
@@ -79,12 +88,12 @@ if (!class_exists("Call_Stats")) {
                 $this->page_id = $the_page->ID;
 
                 // make sure the page is not trashed...
-                $the_page->post_status = "publish";
+                $the_page->post_status = 'publish';
                 $this->page_id = wp_update_post($the_page);
             }
 
-            delete_option("{$this->_name}_page_id");
-            add_option("{$this->_name}_page_id", $this->page_id);
+            delete_option($this->_name . '_page_id');
+            add_option($this->_name . '_page_id', $this->page_id);
 
             $this->copyTemplateFile();
             $this->createTable();
@@ -101,7 +110,7 @@ if (!class_exists("Call_Stats")) {
         }
 
         public function onInit() {
-            if (!isset($_POST["call_statistics_post"]) || $_POST["call_statistics_post"] != 1) {
+            if (!isset($_POST[$this->_name . '_post']) || $_POST[$this->_name . '_post'] != 1) {
                 return;
             }
 
@@ -110,21 +119,21 @@ if (!class_exists("Call_Stats")) {
 
             global $wpdb;
             $rows_affected = $wpdb->insert($this->calls_table_name, $call);
-            if (isset($_POST["topic"]) && is_array($_POST["topic"])) {
+            if (isset($_POST['topic']) && is_array($_POST['topic'])) {
                 $call_id = $wpdb->insert_id;
-                foreach ($_POST["topic"] as $topic) {
+                foreach ($_POST['topic'] as $topic) {
                     $wpdb->insert($this->call_topic_table_name, array(
-                        "call_id" => $call_id,
-                        "topic" => sanitize_text_field($topic),
+                        'call_id' => $call_id,
+                        'topic' => sanitize_text_field($topic),
                     ));
                 }
             }
-            self::addMessage("Thanks! Call record is saved.", "success");
+            self::addMessage('Thanks! Call record is saved.', 'success');
         }
 
         public function onWpEnqueueScripts() {
             // Respects SSL, Style.css is relative to the current file
-            $name = $this->_name . "-style";
+            $name = $this->_name . '-style';
             wp_register_style($name, plugins_url('style.css', __FILE__));
             wp_enqueue_style($name);
         }
@@ -135,45 +144,7 @@ if (!class_exists("Call_Stats")) {
          * For debug.
          */
         public function onActivatedPlugin() {
-            file_put_contents("/tmp/{$this->_name}.txt", ob_get_contents());
-        }
-
-        /**
-         * Generate statistics.
-         */
-        public function getStatsHTML() {
-            $output = "";
-            global $wpdb;
-
-            $stats_types = array(
-                "personal_id" => "Personliga Identifieringskod",
-                "platform" => "Plattform",
-                "type" => "Typ av samtal",
-                "gender" => "Kön",
-                "spouse" => "Åldersgrupp",
-            );
-
-            foreach ($stats_types as $field => $display) {
-                $sql = "SELECT $field, count(1) AS total FROM $this->calls_table_name GROUP BY $field";
-                $result = $wpdb->get_results($sql);
-                $header = array($display, "#");
-                $rows = array();
-                foreach ($result as $item) {
-                    $rows[] = array($item->{$field}, $item->total);
-                }
-                $output .= $this->getTableHTML($header, $rows);
-            }
-
-            $sql = "SELECT topic, count(1) AS total FROM $this->call_topic_table_name GROUP BY topic";
-            $result = $wpdb->get_results($sql);
-            $header = array("Samtalsämne", "#");
-            $rows = array();
-            foreach ($result as $item) {
-                $rows[] = array($item->topic, $item->total);
-            }
-            $output .= $this->getTableHTML($header, $rows);
-
-            return $output;
+            file_put_contents('/tmp/' . $this->_name . '.txt', ob_get_contents());
         }
 
         /**
@@ -181,24 +152,24 @@ if (!class_exists("Call_Stats")) {
          */
         private function validateCallData() {
             $call = array(
-                "personal_id"    => sanitize_text_field($_POST["personal_id"]),
-                "platform"       => sanitize_text_field($_POST["platform"]),
-                "type"           => sanitize_text_field($_POST["type"]),
-                "minutes"        => sanitize_text_field(intval($_POST["minutes"])),
-                "gender"         => sanitize_text_field($_POST["gender"]),
-                "spouse"         => sanitize_text_field($_POST["spouse"]),
-                "other_category" => sanitize_text_field($_POST["other_category"]),
-                "reference"      => sanitize_text_field($_POST["reference"]),
-                "report"         => sanitize_text_field($_POST["report"]),
-                "response"       => sanitize_text_field($_POST["response"]),
+                'personal_id'    => sanitize_text_field($_POST['personal_id']),
+                'platform'       => sanitize_text_field($_POST['platform']),
+                'type'           => sanitize_text_field($_POST['type']),
+                'minutes'        => sanitize_text_field(intval($_POST['minutes'])),
+                'gender'         => sanitize_text_field($_POST['gender']),
+                'spouse'         => sanitize_text_field($_POST['spouse']),
+                'other_category' => sanitize_text_field($_POST['other_category']),
+                'reference'      => sanitize_text_field($_POST['reference']),
+                'report'         => sanitize_text_field($_POST['report']),
+                'response'       => sanitize_text_field($_POST['response']),
             );
 
             $relative_fields = array_keys($call);
-            $relative_fields[] = "topic";
+            $relative_fields[] = 'topic';
 
             $invalid = FALSE;
-            if (empty($call["personal_id"])) {
-                self::addMessage("Please fill personliga identifieringskod", "error");
+            if (empty($call['personal_id'])) {
+                self::addMessage('Please fill personliga identifieringskod', 'error');
                 $invalid = TRUE;
             }
 
@@ -209,41 +180,8 @@ if (!class_exists("Call_Stats")) {
                 unset($_POST[$field]);
             }
 
-            $call["created"] = time();
+            $call['created'] = time();
             return $call;
-        }
-
-        /**
-         * Helper for generate table.
-         */
-        private function getTableHTML($header, $rows, $title = "") {
-            $output = '<table class="stats table table-striped table-hover">';
-
-            $output .= '<tr>';
-            $col = 0;
-            foreach ($header as $item) {
-                $output .= '<th class="col-' . $col++ . '">' . $item . '</th>';
-            }
-            $output .= '</tr>';
-
-            $odd_even = array("odd", "even");
-            $count = 0;
-            foreach ($rows as $row) {
-                $output .= '<tr class="' . $odd_even[$count++ % 2] . '">';
-                $col = 0;
-                foreach ($row as $item) {
-                    $output .= '<td class="col-' . $col++ . '">' . $item . '</td>';
-                }
-                $output .= '</tr>';
-            }
-
-            $output .= '</table>';
-
-            if ($title) {
-                $output = '<h2>' . $title . '</h2>' . $output;
-            }
-
-            return $output;
         }
 
         /**
@@ -252,8 +190,8 @@ if (!class_exists("Call_Stats")) {
          * needs to be copied manually to the new theme's folder.
          */
         private function copyTemplateFile() {
-            $src = __DIR__ . "/" . $this->template_file_name;
-            $dst = get_stylesheet_directory() . "/" . $this->template_file_name;
+            $src = __DIR__ . '/' . $this->template_file_name;
+            $dst = get_stylesheet_directory() . '/' . $this->template_file_name;
 
             if (!file_exists($src)) {
                 return FALSE;
@@ -268,63 +206,63 @@ if (!class_exists("Call_Stats")) {
         }
 
         private function deletePage($hard = FALSE) {
-            $id = get_option("{$this->_name}_page_id");
+            $id = get_option($this->_name . '_page_id');
             if ($id) {
                 wp_delete_post($id, $hard);
             }
         }
 
         private function setOptions() {
-            add_option("{$this->_name}_page_title" , $this->page_title , "" , "yes");
-            add_option("{$this->_name}_page_name"  , $this->page_name  , "" , "yes");
-            add_option("{$this->_name}_page_id"    , $this->page_id    , "" , "yes");
+            add_option($this->_name . '_page_title' , $this->page_title , '' , 'yes');
+            add_option($this->_name . '_page_name'  , $this->page_name  , '' , 'yes');
+            add_option($this->_name . '_page_id'    , $this->page_id    , '' , 'yes');
 
             // form options
-            add_option("{$this->_name}_topic_options", array(
-                "Kärleksrelationer",
-                "Ångest",
-                "Familjerelationer",
-                "Psykisk och fysisk ohälsa",
-                "Depression",
-                "Sex",
-                "Ensamhet",
-                "Självmordstankar",
-                "Kompisrelationer",
-                "Övrigt",
-                "Oro",
-                "Skola",
-                "Mår dåligt",
-                "Sexuella övergrepp/våldtäkt",
-                "Missbruk",
-                "Graviditet/föräldraskap",
-                "Filosofiska tankar",
-                "Sorg",
-                "Dålig självkänsla",
-                "Misshandel/våld",
-                "Mobbing",
-                "Prestation",
-                "Bristande stöd",
-                "Ätstörningar",
-                "Jobb",
-                "Kroppen",
-                "Allmänt prat",
-                "Ilska",
-                "Kriminalitet",
-                "Ekonomiska problem",
-                "Sömnproblem",
-                "Framtiden",
-                "HBTQ",
+            add_option($this->_name . '_topic_options', array(
+                'Kärleksrelationer',
+                'Ångest',
+                'Familjerelationer',
+                'Psykisk och fysisk ohälsa',
+                'Depression',
+                'Sex',
+                'Ensamhet',
+                'Självmordstankar',
+                'Kompisrelationer',
+                'Övrigt',
+                'Oro',
+                'Skola',
+                'Mår dåligt',
+                'Sexuella övergrepp/våldtäkt',
+                'Missbruk',
+                'Graviditet/föräldraskap',
+                'Filosofiska tankar',
+                'Sorg',
+                'Dålig självkänsla',
+                'Misshandel/våld',
+                'Mobbing',
+                'Prestation',
+                'Bristande stöd',
+                'Ätstörningar',
+                'Jobb',
+                'Kroppen',
+                'Allmänt prat',
+                'Ilska',
+                'Kriminalitet',
+                'Ekonomiska problem',
+                'Sömnproblem',
+                'Framtiden',
+                'HBTQ',
             ));
-            add_option("{$this->_name}_platform_options", array("Telefon", "Chatt"));
-            add_option("{$this->_name}_type_options", array("Seriöst samtal", "Vaneringare/Vanechattare", "Jourmissbrukare", "Test/Klick"));
-            add_option("{$this->_name}_gender_options", array("Tjej", "Kille", "Vet ej"));
-            add_option("{$this->_name}_spouse_options", array("0-6 år", "7-13 år (Grundskola åk 1-6)", "14-16 år (Grundskola åk 7-9)", "17-19 år (Gymnasiet)", "20-25 år"));
+            add_option($this->_name . '_platform_options', array('Telefon', 'Chatt'));
+            add_option($this->_name . '_type_options', array('Seriöst samtal', 'Vaneringare/Vanechattare', 'Jourmissbrukare', 'Test/Klick'));
+            add_option($this->_name . '_gender_options', array('Tjej', 'Kille', 'Vet ej'));
+            add_option($this->_name . '_spouse_options', array('0-6 år', '7-13 år (Grundskola åk 1-6)', '14-16 år (Grundskola åk 7-9)', '17-19 år (Gymnasiet)', '20-25 år'));
         }
 
         private function clearOptions() {
-            delete_option("{$this->_name}_page_title");
-            delete_option("{$this->_name}_page_name");
-            delete_option("{$this->_name}_page_id");
+            delete_option($this->_name . '_page_title');
+            delete_option($this->_name . '_page_name');
+            delete_option($this->_name . '_page_id');
         }
 
         private function resetOptions() {
