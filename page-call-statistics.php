@@ -39,7 +39,7 @@ get_header(); ?>
             <?php if (isset($_GET["stats"]) && $_GET["stats"] == "1" && is_super_admin()): ?>
                 <?php echo $call_statistics->view->getStatsHTML(); ?>
             <?php elseif (isset($_GET["list"]) && $_GET["list"] == "1" && is_super_admin()): ?>
-                <?php echo $call_statistics->getListHTML(); ?>
+                <?php echo $call_statistics->view->getListHTML(); ?>
             <?php else: ?>
                 <?php echo $call_statistics->view->getFormHTML(); ?>
             <?php endif; ?>
