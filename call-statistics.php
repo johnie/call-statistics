@@ -117,14 +117,18 @@ if (!class_exists('Call_Stats')) {
             $call = $this->validateCallData();
             if ($call === FALSE) return;
 
+            $topics = isset($call['topic']) ? $call['topic'] : FALSE;
+            unset($call['topic']);
+
             global $wpdb;
-            $rows_affected = $wpdb->insert($this->calls_table_name, $call);
-            if (isset($_POST['topic']) && is_array($_POST['topic'])) {
+
+            $wpdb->insert($this->calls_table_name, $call);
+            if ($topics) {
                 $call_id = $wpdb->insert_id;
-                foreach ($_POST['topic'] as $topic) {
+                foreach ($topics as $topic) {
                     $wpdb->insert($this->call_topic_table_name, array(
                         'call_id' => $call_id,
-                        'topic' => sanitize_text_field($topic),
+                        'topic' => $topic,
                     ));
                 }
             }
@@ -164,8 +168,14 @@ if (!class_exists('Call_Stats')) {
                 'response'       => sanitize_text_field($_POST['response']),
             );
 
+            if (isset($_POST['topic']) && !empty($_POST['topic'])) {
+                $call['topic'] = array();
+                foreach ($_POST['topic'] as $topic) {
+                    $call['topic'][] = sanitize_text_field($topic);
+                }
+            }
+
             $relative_fields = array_keys($call);
-            $relative_fields[] = 'topic';
 
             $invalid = FALSE;
             if (empty($call['personal_id'])) {
@@ -180,7 +190,7 @@ if (!class_exists('Call_Stats')) {
                 unset($_POST[$field]);
             }
 
-            $call['created'] = time();
+            $call['created'] = date('Y:m:d H:i:s');
             return $call;
         }
 
@@ -286,7 +296,7 @@ if (!class_exists('Call_Stats')) {
                 reference VARCHAR(255),
                 report TEXT,
                 response TEXT,
-                created INT(10) UNSIGNED NOT NULL,
+                created DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
                 UNIQUE KEY id (id)
             );";
             dbDelta($sql);
