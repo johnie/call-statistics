@@ -209,6 +209,7 @@ class Call_Stats_View {
             foreach ($result as $item) {
                 $rows[] = array($item->$group_by, $item->total);
             }
+
             $html .= $this->getTableHTML($header, $rows);
         }
         else {
@@ -216,7 +217,6 @@ class Call_Stats_View {
         }
 
         $html .= $this->getStatsPanel();
-
         return $html;
     }
 
@@ -225,16 +225,18 @@ class Call_Stats_View {
      */
     private function getStatsPanel() {
         $html = '';
-        $html .= '<form method="post" action="">';
+        $html .= '<form method="post" action="" class="stats-panel">';
 
-        $html .= '<fieldset><legend>Filters:</legend>';
-        $html .= $this->getCheckboxes('platform', 'Plattform:', get_option($this->setup->_name . '_platform_options'), FALSE, TRUE);
-        $html .= $this->getCheckboxes('type', 'Typ av samtal:', get_option($this->setup->_name . '_type_options'), FALSE, TRUE);
-        $html .= $this->getCheckboxes('gender', 'Kön:', get_option($this->setup->_name . '_gender_options'), FALSE, TRUE);
-        $html .= $this->getCheckboxes('age', 'Åldersgrupp:', get_option($this->setup->_name . '_age_options'), FALSE, TRUE);
+        $html .= '<fieldset>';
+        $html .= '<div class="alert alert-warning">For one field, checking all items has same effect as checking none.</div>';
+        $html .= '<div class="checkboxes">' . $this->getCheckboxes('platform', 'Plattform:', get_option($this->setup->_name . '_platform_options'), FALSE, FALSE) . '</div>';
+        $html .= '<div class="checkboxes">' . $this->getCheckboxes('type', 'Typ av samtal:', get_option($this->setup->_name . '_type_options'), FALSE, FALSE) . '</div>';
+        $html .= '<div class="checkboxes">' . $this->getCheckboxes('gender', 'Kön:', get_option($this->setup->_name . '_gender_options'), FALSE, FALSE) . '</div>';
+        $html .= '<div class="checkboxes">' . $this->getCheckboxes('age', 'Åldersgrupp:', get_option($this->setup->_name . '_age_options'), FALSE, FALSE) . '</div>';
         $html .= '</fieldset>';
 
-        $html .= '<fieldset><legend>Group:</legend>';
+        $html .= '<fieldset>';
+        $html .= '<div class="alert alert-warning">For one field, check all is same as uncheck all</div>';
         $html .= $this->getSelect('group_by', 'Group By:', array(
             '_none_'   => '- None -',
             'platform' => 'Plattform',
@@ -282,7 +284,7 @@ class Call_Stats_View {
     private function getCheckboxes($name, $label, $options, $required = FALSE, $inline = FALSE) {
         $html = '';
         $id = "call-" . str_replace('_', '-', $name);
-        $html .= '<div>' . $label . ($required ? '<span class="required">*</span>' : '') . '</div>';
+        $html .= '<label class="checkboxes-label">' . $label . ($required ? '<span class="required">*</span>' : '') . '</label>';
         foreach ($options as $index => $option) {
             $html .= '<label for="' . $id . '-' . $index . '" class="checkbox' . ($inline ? ' inline' : '') . '">';
             $html .= '<input id="' . $id . '-' . $index . '" type="checkbox" name="' . $name . '[]" value="' . $option . '" ' . ((isset($_REQUEST[$name]) && in_array($option, $_REQUEST[$name])) ? 'checked="checked"' : '') . '> ' . $option;

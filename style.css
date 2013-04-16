@@ -10,6 +10,11 @@
 .super-admin-op {
     margin: 20px 0;
 }
+.stats-panel .checkboxes {
+}
+.stats-panel .checkboxes .checkboxes-label {
+    font-weight: bold;
+}
 
 /*!
  * Bootstrap v2.3.1
