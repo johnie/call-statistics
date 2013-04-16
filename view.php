@@ -12,6 +12,16 @@ class Call_Stats_View {
      */
     public function getFormHTML() {
         $html = '';
+
+        if (is_super_admin()) {
+            $permalink = get_permalink();
+            $glue = strstr($permalink, '?') === FALSE ? '?' : '&';
+            $html .= '<div class="super-admin-op">';
+            $html .= '<a href="' . $permalink . $glue . 'stats=1" class="btn btn-info">Statistics</a>';
+            $html .= ' <a href="' . $permalink . $glue . 'list=1" class="btn btn-info">List</a>';
+            $html .= '</div>';
+        }
+
         $html .= '<form id="add-call" action="" method="post"><fieldset>';
 
         // personal id
