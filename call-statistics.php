@@ -11,7 +11,7 @@
 <?php
 
 include_once __DIR__ . '/options.php';
-include_once __DIR__ . '/template.php';
+include_once __DIR__ . '/view.php';
 
 if (!class_exists('Call_Stats')) {
 
@@ -26,7 +26,7 @@ if (!class_exists('Call_Stats')) {
         public $calls_table_name;
         public $call_topic_table_name;
 
-        public $template;
+        public $view;
         public $wp_options;
 
         public function __construct() {
@@ -42,7 +42,7 @@ if (!class_exists('Call_Stats')) {
             $this->calls_table_name      = $wpdb->prefix . 'cs_calls';
             $this->call_topic_table_name = $wpdb->prefix . 'cs_call_topic';
 
-            $this->template = new Call_Stats_Template($this);
+            $this->view = new Call_Stats_View($this);
             $this->tp_options = new Call_Stats_Options($this);
 
             register_activation_hook  (__FILE__, array($this, 'onActivate'));

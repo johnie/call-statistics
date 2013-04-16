@@ -1,6 +1,6 @@
 <?php
 
-class Call_Stats_Template {
+class Call_Stats_View {
     private $setup;
 
     public function __construct($setup) {
