@@ -130,7 +130,7 @@ class Call_Stats_View {
         $sql = "
             SELECT *
             FROM {$this->setup->calls_table_name} c
-            JOIN (
+            LEFT JOIN (
                 SELECT
                     call_id,
                     GROUP_CONCAT(topic) as topics
@@ -140,7 +140,9 @@ class Call_Stats_View {
             ON c.id = ct.call_id
             WHERE YEAR(c.created) = $year
             AND MONTH(c.created) = $month
+            ORDER BY created DESC
         ";
+        print $sql;
 
         global $wpdb;
         return $wpdb->get_results($sql);
@@ -183,6 +185,15 @@ class Call_Stats_View {
                     $wheres[] = $field . ' = ' . $values[0];
                 }
             }
+        }
+
+        // minutes
+        if (isset($_POST['min_minutes']) && !empty($_POST['min_minutes'])) {
+            $wheres[] = 'minutes > ' . intval($_POST['min_minutes']);
+        }
+
+        if (isset($_POST['max_minutes']) && !empty($_POST['max_minutes'])) {
+            $wheres[] = 'minutes < ' . intval($_POST['max_minutes']);
         }
 
         $sql = 'SELECT ' . implode(', ', $selects) . ' FROM ' . $this->setup->calls_table_name;
@@ -233,10 +244,11 @@ class Call_Stats_View {
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('type', 'Typ av samtal:', get_option($this->setup->_name . '_type_options'), FALSE, FALSE) . '</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('gender', 'Kön:', get_option($this->setup->_name . '_gender_options'), FALSE, FALSE) . '</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('age', 'Åldersgrupp:', get_option($this->setup->_name . '_age_options'), FALSE, FALSE) . '</div>';
+        $html .= '<div>' . $this->getTextfield('min_minutes', 'Samtalstid i minuter >') . '</div>';
+        $html .= '<div>' . $this->getTextfield('max_minutes', 'Samtalstid i minuter <') . '</div>';
         $html .= '</fieldset>';
 
         $html .= '<fieldset>';
-        $html .= '<div class="alert alert-warning">For one field, check all is same as uncheck all</div>';
         $html .= $this->getSelect('group_by', 'Group By:', array(
             '_none_'   => '- None -',
             'platform' => 'Plattform',

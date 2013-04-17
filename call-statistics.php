@@ -187,7 +187,7 @@ if (!class_exists('Call_Stats')) {
 
             // unset relative $_POST values
             foreach ($relative_fields as $field) {
-                unset($_POST[$field]);
+                unset($_REQUEST[$field]);
             }
 
             $call['created'] = date('Y:m:d H:i:s');
