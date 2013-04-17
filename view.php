@@ -142,7 +142,6 @@ class Call_Stats_View {
             AND MONTH(c.created) = $month
             ORDER BY created DESC
         ";
-        print $sql;
 
         global $wpdb;
         return $wpdb->get_results($sql);
