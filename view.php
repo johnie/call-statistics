@@ -17,7 +17,7 @@ class Call_Stats_View {
             $permalink = get_permalink();
             $glue = strstr($permalink, '?') === FALSE ? '?' : '&';
             $html .= '<div class="super-admin-op">';
-            $html .= '<a href="' . $permalink . $glue . 'stats=1" class="btn btn-info">Statistics</a>';
+            $html .= '<a href="' . $permalink . $glue . 'stats=1" class="btn btn-info">Statistik</a>';
             $html .= ' <a href="' . $permalink . $glue . 'list=1" class="btn btn-info">List</a>';
             $html .= '</div>';
         }
