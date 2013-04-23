@@ -111,6 +111,7 @@ class Call_Stats_View {
         $html .= '<input type="hidden" name="page_id" value="' . $_GET['page_id'] . '">';
         $html .= '<input type="hidden" name="list" value="' . $_GET['list'] . '">';
         $html .= '<input type="submit" class="btn btn-primary" value="Byt">';
+        $html .= '<a href="' . get_page_link($this->setup->page_id) . '" class="btn btn-cancel">Tillbaka</a>';
         $html .= '</form>';
 
         $html .= $this->getTableHTML($header, $rows);
@@ -265,6 +266,7 @@ class Call_Stats_View {
         $html .= '</fieldset>';
 
         $html .= '<input class="btn btn-primary" type="submit" value="Hämta">';
+        $html .= '<a href="' . get_page_link($this->setup->page_id) . '" class="btn btn-cancel">Tillbaka</a>';
 
         $html .= '</form>';
 
