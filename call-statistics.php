@@ -35,10 +35,10 @@ if (!class_exists('Call_Stats')) {
             global $wpdb;
 
             $this->_name                 = 'call_statistics';
-            $this->page_title            = 'Call Statistics';
-            $this->page_name             = str_replace($this->_name, '_', '-');
+            $this->page_title            = 'Jourstatistik';
+            $this->page_name             = 'jourstatistik';
             $this->page_id               = get_option($this->_name . '_page_id');
-            $this->template_file_name    = 'page-' . $this->page_name . '.php';
+            $this->template_file_name    = 'page-' . str_replace($this->_name, '_', '-') . '.php';
             $this->calls_table_name      = $wpdb->prefix . 'cs_calls';
             $this->call_topic_table_name = $wpdb->prefix . 'cs_call_topic';
 

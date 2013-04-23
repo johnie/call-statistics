@@ -160,7 +160,7 @@ class Call_Stats_View {
             'age'      => get_option($this->setup->_name . '_age_options'),
         );
 
-        $group_by = isset($_POST['group_by']) && in_array($_POST['group_by'], array('platform', 'type', 'gender', 'age')) ? $_POST['group_by'] : FALSE;
+        $group_by = isset($_POST['group_by']) && in_array($_POST['group_by'], array('platform', 'type', 'gender', 'age', 'topic')) ? $_POST['group_by'] : FALSE;
 
         $selects = array('COUNT(1) AS total');
         if ($group_by) $selects[] = $group_by;
@@ -195,7 +195,12 @@ class Call_Stats_View {
             $wheres[] = 'minutes < ' . intval($_POST['max_minutes']);
         }
 
-        $sql = 'SELECT ' . implode(', ', $selects) . ' FROM ' . $this->setup->calls_table_name;
+        $sql = 'SELECT ' . implode(', ', $selects) . ' FROM ' . $this->setup->calls_table_name . ' calls';
+
+        if ('topic' == $group_by) {
+            $sql .= ' LEFT JOIN ' . $this->setup->call_topic_table_name . ' call_topic ON calls.id = call_topic.call_id';
+        }
+
         if (!empty($wheres)) {
             $sql .= ' WHERE ' . implode(' AND ', $wheres);
         }
@@ -210,20 +215,21 @@ class Call_Stats_View {
         if ($group_by) {
             $display = array(
                 "platform" => "Plattform",
-                "type" => "Typ av samtal",
-                "gender" => "Kön",
-                "age" => "Åldersgrupp",
+                "type"     => "Typ av samtal",
+                "gender"   => "Kön",
+                "age"      => "Åldersgrupp",
+                "topic"    => "Samtalsämne",
             );
             $header = array($display[$group_by], "#");
             $rows = array();
             foreach ($result as $item) {
-                $rows[] = array($item->$group_by, $item->total);
+                $rows[] = array($item->$group_by ? $item->$group_by : '- Inget -', $item->total);
             }
 
             $html .= $this->getTableHTML($header, $rows);
         }
         else {
-            $html .= '<div class="alert alert-success">Found ' .  $result[0]->total . ' call(s).</div>';
+            $html .= '<div class="alert alert-success">Hittade ' .  $result[0]->total . ' samtal.</div>';
         }
 
         $html .= $this->getStatsPanel();
@@ -238,7 +244,7 @@ class Call_Stats_View {
         $html .= '<form method="post" action="" class="stats-panel">';
 
         $html .= '<fieldset>';
-        $html .= '<div class="alert alert-warning">For one field, checking all items has same effect as checking none.</div>';
+        $html .= '<div class="alert alert-warning">Att kryssa i samtliga val i en kategori har samma funktion som att inte kryssa i någon.</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('platform', 'Plattform:', get_option($this->setup->_name . '_platform_options'), FALSE, FALSE) . '</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('type', 'Typ av samtal:', get_option($this->setup->_name . '_type_options'), FALSE, FALSE) . '</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('gender', 'Kön:', get_option($this->setup->_name . '_gender_options'), FALSE, FALSE) . '</div>';
@@ -254,6 +260,7 @@ class Call_Stats_View {
             'type'     => 'Typ av samtal',
             'gender'   => 'Kön',
             'age'      => 'Åldersgrupp',
+            'topic'    => 'Samtalsämne',
         ));
         $html .= '</fieldset>';
 
