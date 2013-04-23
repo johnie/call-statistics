@@ -41,8 +41,9 @@
 
 	</div>
 
-	<div id="col-sub">
+<!--	<div id="col-sub">
 		<?php $rkuf->load_modules(); ?>
 	</div>
+-->
 </div>
 <?php get_footer(); ?>

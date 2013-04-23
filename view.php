@@ -18,7 +18,7 @@ class Call_Stats_View {
             $glue = strstr($permalink, '?') === FALSE ? '?' : '&';
             $html .= '<div class="super-admin-op">';
             $html .= '<a href="' . $permalink . $glue . 'stats=1" class="btn btn-info">Statistik</a>';
-            $html .= ' <a href="' . $permalink . $glue . 'list=1" class="btn btn-info">List</a>';
+            $html .= ' <a href="' . $permalink . $glue . 'list=1" class="btn btn-info">Lista</a>';
             $html .= '</div>';
         }
 
@@ -62,7 +62,7 @@ class Call_Stats_View {
         $html .= $this->getTextarea('response', 'Hur bemötte du vane-eller jourmissbrukaren?');
 
         $html .= '<input name="' . $this->setup->_name . '_post" type="hidden" value="1">';
-        $html .= '<input type="submit" value="Submit" class="btn btn-primary">';
+        $html .= '<input type="submit" value="Hämta" class="btn btn-primary">';
         $html .= '</fieldset></form>';
 
         return $html;
@@ -110,7 +110,7 @@ class Call_Stats_View {
         $html .= '</select>';
         $html .= '<input type="hidden" name="page_id" value="' . $_GET['page_id'] . '">';
         $html .= '<input type="hidden" name="list" value="' . $_GET['list'] . '">';
-        $html .= '<input type="submit" class="btn btn-primary" value="change">';
+        $html .= '<input type="submit" class="btn btn-primary" value="Byt">';
         $html .= '</form>';
 
         $html .= $this->getTableHTML($header, $rows);
@@ -264,7 +264,7 @@ class Call_Stats_View {
         ));
         $html .= '</fieldset>';
 
-        $html .= '<input class="btn btn-primary" type="submit" value="submit">';
+        $html .= '<input class="btn btn-primary" type="submit" value="Hämta">';
 
         $html .= '</form>';
 
