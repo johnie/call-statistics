@@ -250,12 +250,12 @@ class Call_Stats_View {
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('type', 'Typ av samtal:', get_option($this->setup->_name . '_type_options'), FALSE, FALSE) . '</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('gender', 'Kön:', get_option($this->setup->_name . '_gender_options'), FALSE, FALSE) . '</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('age', 'Åldersgrupp:', get_option($this->setup->_name . '_age_options'), FALSE, FALSE) . '</div>';
-        $html .= '<div>' . $this->getTextfield('min_minutes', 'Samtalstid i minuter >') . '</div>';
-        $html .= '<div>' . $this->getTextfield('max_minutes', 'Samtalstid i minuter <') . '</div>';
+        $html .= '<div>' . $this->getTextfield('min_minutes', 'Samtalstid längre än (ange i hela minuter)') . '</div>';
+        $html .= '<div>' . $this->getTextfield('max_minutes', 'Samtalstid kortare än (ange i hela minuter)') . '</div>';
         $html .= '</fieldset>';
 
         $html .= '<fieldset>';
-        $html .= $this->getSelect('group_by', 'Group By:', array(
+        $html .= $this->getSelect('group_by', 'Gruppering:', array(
             '_none_'   => '- None -',
             'platform' => 'Plattform',
             'type'     => 'Typ av samtal',

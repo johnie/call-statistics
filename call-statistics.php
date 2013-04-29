@@ -266,7 +266,15 @@ if (!class_exists('Call_Stats')) {
             add_option($this->_name . '_platform_options', array('Telefon', 'Chatt'));
             add_option($this->_name . '_type_options', array('Seriöst samtal', 'Vaneringare/Vanechattare', 'Jourmissbrukare', 'Test/Klick'));
             add_option($this->_name . '_gender_options', array('Tjej', 'Kille', 'Vet ej'));
-            add_option($this->_name . '_age_options', array('0-6 år', '7-13 år (Grundskola åk 1-6)', '14-16 år (Grundskola åk 7-9)', '17-19 år (Gymnasiet)', '20-25 år'));
+            add_option($this->_name . '_age_options', array(
+                'Vet ej',
+                '0-6 år',
+                '7-13 år (Grundskola åk 1-6)',
+                '14-16 år (Grundskola åk 7-9)',
+                '17-19 år (Gymnasiet)',
+                '20-25 år',
+                '25+ år',
+            ));
         }
 
         private function clearOptions() {
