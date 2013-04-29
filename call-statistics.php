@@ -281,6 +281,10 @@ if (!class_exists('Call_Stats')) {
             delete_option($this->_name . '_page_title');
             delete_option($this->_name . '_page_name');
             delete_option($this->_name . '_page_id');
+            delete_option($this->_name . '_platform_options');
+            //delete_option($this->_name . '_type_options'); // admin could have changed options of this one, keep it
+            delete_option($this->_name . '_gender_options');
+            delete_option($this->_name . '_age_options');
         }
 
         private function resetOptions() {
