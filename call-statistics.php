@@ -157,15 +157,11 @@ if (!class_exists('Call_Stats')) {
         private function validateCallData() {
             $call = array(
                 'personal_id'    => sanitize_text_field($_POST['personal_id']),
-                'platform'       => sanitize_text_field($_POST['platform']),
                 'type'           => sanitize_text_field($_POST['type']),
-                'minutes'        => sanitize_text_field(intval($_POST['minutes'])),
+                'minutes'        => sanitize_text_field(($_POST['minutes'])),
                 'gender'         => sanitize_text_field($_POST['gender']),
                 'age'         => sanitize_text_field($_POST['age']),
                 'other_category' => sanitize_text_field($_POST['other_category']),
-                'reference'      => sanitize_text_field($_POST['reference']),
-                'report'         => sanitize_text_field($_POST['report']),
-                'response'       => sanitize_text_field($_POST['response']),
             );
 
             if (isset($_POST['topic']) && !empty($_POST['topic'])) {
@@ -180,6 +176,11 @@ if (!class_exists('Call_Stats')) {
             $invalid = FALSE;
             if (empty($call['personal_id'])) {
                 self::addMessage('Please fill personliga identifieringskod', 'error');
+                $invalid = TRUE;
+            }
+
+            if (empty($call['minutes']) || !is_numeric($call['minutes'])) {
+                self::addMessage('Please fill Samtalslängd in minutes', 'error');
                 $invalid = TRUE;
             }
 
@@ -263,8 +264,7 @@ if (!class_exists('Call_Stats')) {
                 'Framtiden',
                 'HBTQ',
             ));
-            add_option($this->_name . '_platform_options', array('Telefon', 'Chatt'));
-            add_option($this->_name . '_type_options', array('Seriöst samtal', 'Vaneringare/Vanechattare', 'Jourmissbrukare', 'Test/Klick'));
+            add_option($this->_name . '_type_options', array('Seriöst samtal', 'Vaneringare/Vanechattare', 'Jourmissbrukare'));
             add_option($this->_name . '_gender_options', array('Tjej', 'Kille', 'Vet ej'));
             add_option($this->_name . '_age_options', array(
                 'Vet ej',
@@ -281,8 +281,7 @@ if (!class_exists('Call_Stats')) {
             delete_option($this->_name . '_page_title');
             delete_option($this->_name . '_page_name');
             delete_option($this->_name . '_page_id');
-            delete_option($this->_name . '_platform_options');
-            //delete_option($this->_name . '_type_options'); // admin could have changed options of this one, keep it
+            delete_option($this->_name . '_type_options');
             delete_option($this->_name . '_gender_options');
             delete_option($this->_name . '_age_options');
         }
@@ -299,15 +298,11 @@ if (!class_exists('Call_Stats')) {
             $sql = "CREATE TABLE {$this->calls_table_name} (
                 id INT(10) NOT NULL AUTO_INCREMENT,
                 personal_id VARCHAR(16) NOT NULL,
-                platform VARCHAR(32) NOT NULL,
                 type VARCHAR(32),
                 minutes SMALLINT(5),
                 gender VARCHAR(32),
                 age VARCHAR(64),
                 other_category TEXT,
-                reference VARCHAR(255),
-                report TEXT,
-                response TEXT,
                 created DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
                 UNIQUE KEY id (id)
             );";

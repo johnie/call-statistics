@@ -27,16 +27,12 @@ class Call_Stats_View {
         // personal id
         $html .= $this->getTextfield('personal_id', 'Fyll i din personliga identifieringskod:', TRUE);
 
-        // platform
-        $options = get_option($this->setup->_name . '_platform_options');
-        $html .= $this->getSelect('platform', 'Plattform:', array_combine($options, $options), TRUE);
-
         // type
         $options = get_option($this->setup->_name . '_type_options');
         $html .= $this->getSelect('type', 'Typ av samtal:', array_combine($options, $options), TRUE);
 
         // minutes
-        $html .= $this->getTextfield('minutes', 'Samtalstid i minuter:');
+        $html .= $this->getTextfield('minutes', 'Samtalslängd (minuter):', TRUE);
 
         // gender 
         $options = get_option($this->setup->_name . '_gender_options');
@@ -51,15 +47,6 @@ class Call_Stats_View {
 
         // other category
         $html .= $this->getTextarea('other_category', 'Annan samtalskategori:');
-
-        // reference
-        $html .= $this->getTextfield('reference', 'Hänvisning:');
-
-        // report
-        $html .= $this->getTextarea('report', 'Rapport om vane- eller jourmissbrukare:');
-
-        // response
-        $html .= $this->getTextarea('response', 'Hur bemötte du vane-eller jourmissbrukaren?');
 
         $html .= '<input name="' . $this->setup->_name . '_post" type="hidden" value="1">';
         $html .= '<input type="submit" value="Hämta" class="btn btn-primary">';
@@ -76,21 +63,17 @@ class Call_Stats_View {
         $query_month = isset($_GET['month']) ? $_GET['month'] : $cur_month;
 
         $results = $this->getCalls($query_year, $query_month);
-        $header = array('PID', 'Platform', 'Typ', 'Minuter', 'Kön', 'Åldersgrupp', 'Samtalsämne', 'Annan', 'Hänvisning', 'Rapport', 'Bemötte', 'Datetime');
+        $header = array('PID', 'Typ', 'Minuter', 'Kön', 'Åldersgrupp', 'Samtalsämne', 'Annan', 'Datetime');
         $rows = array();
         foreach ($results as $call) {
             $rows[] = array(
                 $call->personal_id,
-                $call->platform,
                 $call->type,
                 $call->minutes,
                 $call->gender,
                 $call->age,
                 $call->topics,
                 $call->other_category,
-                $call->reference,
-                $call->report,
-                $call->response,
                 $call->created,
             );
         }
@@ -155,19 +138,18 @@ class Call_Stats_View {
         global $wpdb;
 
         $options = array(
-            'platform' => get_option($this->setup->_name . '_platform_options'),
             'type'     => get_option($this->setup->_name . '_type_options'),
             'gender'   => get_option($this->setup->_name . '_gender_options'),
             'age'      => get_option($this->setup->_name . '_age_options'),
         );
 
-        $group_by = isset($_POST['group_by']) && in_array($_POST['group_by'], array('platform', 'type', 'gender', 'age', 'topic')) ? $_POST['group_by'] : FALSE;
+        $group_by = isset($_POST['group_by']) && in_array($_POST['group_by'], array('type', 'gender', 'age', 'topic')) ? $_POST['group_by'] : FALSE;
 
-        $selects = array('COUNT(1) AS total');
+        $selects = array('COUNT(1) AS total', 'SUM(minutes) AS minutes_total');
         if ($group_by) $selects[] = $group_by;
 
         $wheres = array();
-        $fields = array('platform', 'type', 'gender', 'age');
+        $fields = array('type', 'gender', 'age');
         foreach ($fields as $field) {
             if (isset($_POST[$field]) && !empty($_POST[$field])) {
                 // if all checked, no need to set as condition
@@ -215,22 +197,21 @@ class Call_Stats_View {
 
         if ($group_by) {
             $display = array(
-                "platform" => "Plattform",
                 "type"     => "Typ av samtal",
                 "gender"   => "Kön",
                 "age"      => "Åldersgrupp",
                 "topic"    => "Samtalsämne",
             );
-            $header = array($display[$group_by], "#");
+            $header = array($display[$group_by], "#", "#minuter");
             $rows = array();
             foreach ($result as $item) {
-                $rows[] = array($item->$group_by ? $item->$group_by : '- Inget -', $item->total);
+                $rows[] = array($item->$group_by ? $item->$group_by : '- Inget -', $item->total, $item->minutes_total);
             }
 
             $html .= $this->getTableHTML($header, $rows);
         }
         else {
-            $html .= '<div class="alert alert-success">Hittade ' .  $result[0]->total . ' samtal.</div>';
+            $html .= '<div class="alert alert-success">Hittade ' .  $result[0]->total . ' samtal (' . $result[0]->minutes_total . ' minuter).</div>';
         }
 
         $html .= $this->getStatsPanel();
@@ -246,7 +227,6 @@ class Call_Stats_View {
 
         $html .= '<fieldset>';
         $html .= '<div class="alert alert-warning">Att kryssa i samtliga val i en kategori har samma funktion som att inte kryssa i någon.</div>';
-        $html .= '<div class="checkboxes">' . $this->getCheckboxes('platform', 'Plattform:', get_option($this->setup->_name . '_platform_options'), FALSE, FALSE) . '</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('type', 'Typ av samtal:', get_option($this->setup->_name . '_type_options'), FALSE, FALSE) . '</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('gender', 'Kön:', get_option($this->setup->_name . '_gender_options'), FALSE, FALSE) . '</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('age', 'Åldersgrupp:', get_option($this->setup->_name . '_age_options'), FALSE, FALSE) . '</div>';
@@ -257,7 +237,6 @@ class Call_Stats_View {
         $html .= '<fieldset>';
         $html .= $this->getSelect('group_by', 'Gruppering:', array(
             '_none_'   => '- None -',
-            'platform' => 'Plattform',
             'type'     => 'Typ av samtal',
             'gender'   => 'Kön',
             'age'      => 'Åldersgrupp',
