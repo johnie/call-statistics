@@ -175,12 +175,12 @@ if (!class_exists('Call_Stats')) {
 
             $invalid = FALSE;
             if (empty($call['personal_id'])) {
-                self::addMessage('Please fill personliga identifieringskod', 'error');
+                self::addMessage('Var vänlig ange din personliga identifieringskod', 'error');
                 $invalid = TRUE;
             }
 
             if (empty($call['minutes']) || !is_numeric($call['minutes'])) {
-                self::addMessage('Please fill Samtalslängd in minutes', 'error');
+                self::addMessage('Var vänlig ange samtalslängd i minuter', 'error');
                 $invalid = TRUE;
             }
 

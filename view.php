@@ -244,7 +244,7 @@ class Call_Stats_View {
         ));
         $html .= '</fieldset>';
 
-        $html .= '<input class="btn btn-primary" type="submit" value="Hämta">';
+        $html .= '<input class="btn btn-primary" type="submit" value="Skicka">';
         $html .= '<a href="' . get_page_link($this->setup->page_id) . '" class="btn btn-cancel">Tillbaka</a>';
 
         $html .= '</form>';
