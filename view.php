@@ -49,7 +49,7 @@ class Call_Stats_View {
         $html .= $this->getTextarea('other_category', 'Annan samtalskategori:');
 
         $html .= '<input name="' . $this->setup->_name . '_post" type="hidden" value="1">';
-        $html .= '<input type="submit" value="Hämta" class="btn btn-primary">';
+        $html .= '<input type="submit" value="Skicka" class="btn btn-primary">';
         $html .= '</fieldset></form>';
 
         return $html;
@@ -244,7 +244,7 @@ class Call_Stats_View {
         ));
         $html .= '</fieldset>';
 
-        $html .= '<input class="btn btn-primary" type="submit" value="Skicka">';
+        $html .= '<input class="btn btn-primary" type="submit" value="Hämta">';
         $html .= '<a href="' . get_page_link($this->setup->page_id) . '" class="btn btn-cancel">Tillbaka</a>';
 
         $html .= '</form>';
