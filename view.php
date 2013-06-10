@@ -143,11 +143,8 @@ class Call_Stats_View {
             'age'      => get_option($this->setup->_name . '_age_options'),
         );
 
-        $group_by = isset($_POST['group_by']) && in_array($_POST['group_by'], array('type', 'gender', 'age', 'topic')) ? $_POST['group_by'] : FALSE;
-
+        // make the query
         $selects = array('COUNT(1) AS total', 'SUM(minutes) AS minutes_total');
-        if ($group_by) $selects[] = $group_by;
-
         $wheres = array();
         $fields = array('type', 'gender', 'age');
         foreach ($fields as $field) {
@@ -173,48 +170,56 @@ class Call_Stats_View {
         if (isset($_POST['min_minutes']) && !empty($_POST['min_minutes'])) {
             $wheres[] = 'minutes > ' . intval($_POST['min_minutes']);
         }
-
         if (isset($_POST['max_minutes']) && !empty($_POST['max_minutes'])) {
             $wheres[] = 'minutes < ' . intval($_POST['max_minutes']);
         }
 
         $sql = 'SELECT ' . implode(', ', $selects) . ' FROM ' . $this->setup->calls_table_name . ' calls';
-
-        if ('topic' == $group_by) {
-            $sql .= ' LEFT JOIN ' . $this->setup->call_topic_table_name . ' call_topic ON calls.id = call_topic.call_id';
-        }
-
         if (!empty($wheres)) {
             $sql .= ' WHERE ' . implode(' AND ', $wheres);
         }
-        if ($group_by) {
-            $sql .= " GROUP BY $group_by";
-        }
-
         $result = $wpdb->get_results($sql);
 
+        # group by age
+        $age_sql = 'SELECT ' . implode(', ', array_merge($selects, array('age'))) . ' FROM ' . $this->setup->calls_table_name . ' calls';
+        if (!empty($wheres)) {
+            $age_sql .= ' WHERE ' . implode(' AND ', $wheres);
+        }
+        $age_sql .= ' GROUP BY age';
+        $age_result = $wpdb->get_results($age_sql);
+
+        # group by topic
+        $topic_sql = 'SELECT ' . implode(', ', array_merge($selects, array('topic'))) . ' FROM ' . $this->setup->calls_table_name . ' calls';
+        $topic_sql .= ' LEFT JOIN ' . $this->setup->call_topic_table_name . ' call_topic ON calls.id = call_topic.call_id';
+        if (!empty($wheres)) {
+            $topic_sql .= ' WHERE ' . implode(' AND ', $wheres);
+        }
+        $topic_sql .= ' GROUP BY topic';
+        $topic_result = $wpdb->get_results($topic_sql);
+
         $html = '';
-
-        if ($group_by) {
-            $display = array(
-                "type"     => "Typ av samtal",
-                "gender"   => "Kön",
-                "age"      => "Åldersgrupp",
-                "topic"    => "Samtalsämne",
-            );
-            $header = array($display[$group_by], "#", "#minuter");
-            $rows = array();
-            foreach ($result as $item) {
-                $rows[] = array($item->$group_by ? $item->$group_by : '- Inget -', $item->total, $item->minutes_total);
-            }
-
-            $html .= $this->getTableHTML($header, $rows);
-        }
-        else {
-            $html .= '<div class="alert alert-success">Hittade ' .  $result[0]->total . ' samtal (' . $result[0]->minutes_total . ' minuter).</div>';
-        }
-
+        # filter
         $html .= $this->getStatsPanel();
+
+        # total count
+        $html .= '<div class="alert alert-success">Hittade ' .  $result[0]->total . ' samtal (' . $result[0]->minutes_total . ' minuter).</div>';
+
+        # grouped by age
+        $header = array("Åldersgrupp", "Totalt");
+        $rows = array();
+        foreach ($age_result as $item) {
+            $rows[] = array($item->age, $item->total);
+        }
+        $html .= $this->getTableHTML($header, $rows);
+
+        # grouped by topic
+        $header = array("Samtalsämne", "Totalt");
+        $rows = array();
+        foreach ($topic_result as $item) {
+            $rows[] = array($item->topic ? $item->topic : "- Annat -", $item->total);
+        }
+        $html .= $this->getTableHTML($header, $rows);
+
         return $html;
     }
 
@@ -230,18 +235,9 @@ class Call_Stats_View {
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('type', 'Typ av samtal:', get_option($this->setup->_name . '_type_options'), FALSE, FALSE) . '</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('gender', 'Kön:', get_option($this->setup->_name . '_gender_options'), FALSE, FALSE) . '</div>';
         $html .= '<div class="checkboxes">' . $this->getCheckboxes('age', 'Åldersgrupp:', get_option($this->setup->_name . '_age_options'), FALSE, FALSE) . '</div>';
-        $html .= '<div>' . $this->getTextfield('min_minutes', 'Samtalstid längre än (ange i hela minuter)') . '</div>';
-        $html .= '<div>' . $this->getTextfield('max_minutes', 'Samtalstid kortare än (ange i hela minuter)') . '</div>';
-        $html .= '</fieldset>';
-
-        $html .= '<fieldset>';
-        $html .= $this->getSelect('group_by', 'Gruppering:', array(
-            '_none_'   => '- None -',
-            'type'     => 'Typ av samtal',
-            'gender'   => 'Kön',
-            'age'      => 'Åldersgrupp',
-            'topic'    => 'Samtalsämne',
-        ));
+        $html .= '<div class="clearfix"></div>';
+        $html .= '<div class="peroid">' . $this->getTextfield('min_minutes', 'Samtalstid längre än') . '<span class="desc">ange i hela minuter</span></div>';
+        $html .= '<div class="peroid">' . $this->getTextfield('max_minutes', 'Samtalstid kortare än') . '<span class="desc">ange i hela minuter</span></div>';
         $html .= '</fieldset>';
 
         $html .= '<input class="btn btn-primary" type="submit" value="Hämta">';

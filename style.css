@@ -10,10 +10,30 @@
 .super-admin-op {
     margin: 20px 0;
 }
-.stats-panel .checkboxes {
+.stats-panel {
+    margin-bottom: 50px;
 }
-.stats-panel .checkboxes .checkboxes-label {
+.stats-panel .checkboxes .checkboxes-label,
+.stats-panel .peroid label {
     font-weight: bold;
+}
+
+.stats-panel .checkboxes {
+    float: left;
+    padding: 0 30px 0 0;
+}
+.stats-panel .peroid {
+    float: left;
+    padding: 0 30px 0 0;
+}
+.stats-panel .peroid input {
+    width: 100px;
+    margin: 0;
+}
+.stats-panel .peroid .desc {
+    display: block;
+    font-size: 12px;
+    color: #999;
 }
 
 /*!
