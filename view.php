@@ -174,51 +174,48 @@ class Call_Stats_View {
             $wheres[] = 'minutes < ' . intval($_POST['max_minutes']);
         }
 
+        $html = '';
+
+        # filter
+        $html .= $this->getStatsPanel();
+
         $sql = 'SELECT ' . implode(', ', $selects) . ' FROM ' . $this->setup->calls_table_name . ' calls';
         if (!empty($wheres)) {
             $sql .= ' WHERE ' . implode(' AND ', $wheres);
         }
         $result = $wpdb->get_results($sql);
 
-        # group by age
-        $age_sql = 'SELECT ' . implode(', ', array_merge($selects, array('age'))) . ' FROM ' . $this->setup->calls_table_name . ' calls';
-        if (!empty($wheres)) {
-            $age_sql .= ' WHERE ' . implode(' AND ', $wheres);
-        }
-        $age_sql .= ' GROUP BY age';
-        $age_result = $wpdb->get_results($age_sql);
-
-        # group by topic
-        $topic_sql = 'SELECT ' . implode(', ', array_merge($selects, array('topic'))) . ' FROM ' . $this->setup->calls_table_name . ' calls';
-        $topic_sql .= ' LEFT JOIN ' . $this->setup->call_topic_table_name . ' call_topic ON calls.id = call_topic.call_id';
-        if (!empty($wheres)) {
-            $topic_sql .= ' WHERE ' . implode(' AND ', $wheres);
-        }
-        $topic_sql .= ' GROUP BY topic';
-        $topic_result = $wpdb->get_results($topic_sql);
-
-        $html = '';
-        # filter
-        $html .= $this->getStatsPanel();
-
         # total count
         $html .= '<div class="alert alert-success">Hittade ' .  $result[0]->total . ' samtal (' . $result[0]->minutes_total . ' minuter).</div>';
 
-        # grouped by age
-        $header = array("Åldersgrupp", "Totalt");
-        $rows = array();
-        foreach ($age_result as $item) {
-            $rows[] = array($item->age, $item->total);
-        }
-        $html .= $this->getTableHTML($header, $rows);
+        # grouped
+        $groups = array(
+            'type' => 'Typ av samtal',
+            'gender' => 'Kön',
+            'age' => 'Åldersgrupp',
+            'topic' => 'Samtalsämne',
+        );
 
-        # grouped by topic
-        $header = array("Samtalsämne", "Totalt");
-        $rows = array();
-        foreach ($topic_result as $item) {
-            $rows[] = array($item->topic ? $item->topic : "- Annat -", $item->total);
+        foreach ($groups as $key => $name)  {
+            $sql = 'SELECT ' . implode(', ', array_merge($selects, array($key))) . ' FROM ' . $this->setup->calls_table_name . ' calls';
+
+            if ($key == 'topic') {
+                $sql .= ' LEFT JOIN ' . $this->setup->call_topic_table_name . ' call_topic ON calls.id = call_topic.call_id';
+            }
+
+            if (!empty($wheres)) {
+                $sql .= ' WHERE ' . implode(' AND ', $wheres);
+            }
+            $sql .= ' GROUP BY ' . $key;
+            $result = $wpdb->get_results($sql);
+
+            $header = array($name, "Totalt");
+            $rows = array();
+            foreach ($result as $item) {
+                $rows[] = array($item->$key, $item->total);
+            }
+            $html .= $this->getTableHTML($header, $rows);
         }
-        $html .= $this->getTableHTML($header, $rows);
 
         return $html;
     }
