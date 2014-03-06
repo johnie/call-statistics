@@ -186,7 +186,8 @@ class Call_Stats_View {
         $result = $wpdb->get_results($sql);
 
         # total count
-        $html .= '<div class="alert alert-success">Hittade ' .  $result[0]->total . ' samtal (' . $result[0]->minutes_total . ' minuter).</div>';
+        $total_all = $result[0]->total;
+        $html .= '<div class="alert alert-success">Hittade ' .  $total_all . ' samtal (' . $result[0]->minutes_total . ' minuter).</div>';
 
         # grouped
         $groups = array(
@@ -209,10 +210,10 @@ class Call_Stats_View {
             $sql .= ' GROUP BY ' . $key;
             $result = $wpdb->get_results($sql);
 
-            $header = array($name, "Totalt");
+            $header = array($name, "Totalt", "%");
             $rows = array();
             foreach ($result as $item) {
-                $rows[] = array($item->$key, $item->total);
+                $rows[] = array($item->$key, $item->total, round($item->total * 100 / $total_all, 2) . ' %');
             }
             $html .= $this->getTableHTML($header, $rows);
         }
