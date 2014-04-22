@@ -168,10 +168,18 @@ class Call_Stats_View {
 
         // minutes
         if (isset($_POST['min_minutes']) && !empty($_POST['min_minutes'])) {
-            $wheres[] = 'minutes > ' . intval($_POST['min_minutes']);
+            $wheres[] = 'minutes >= ' . intval($_POST['min_minutes']);
         }
         if (isset($_POST['max_minutes']) && !empty($_POST['max_minutes'])) {
-            $wheres[] = 'minutes < ' . intval($_POST['max_minutes']);
+            $wheres[] = 'minutes <= ' . intval($_POST['max_minutes']);
+        }
+
+        // interval
+        if (isset($_POST['interval_start']) && !empty($_POST['interval_start'])) {
+            $wheres[] = 'created >= "' . date('Y-m-d H:i:s', strtotime($_POST['interval_start'])) . '"';
+        }
+        if (isset($_POST['interval_end']) && !empty($_POST['interval_end'])) {
+            $wheres[] = 'created <= "' . date('Y-m-d H:i:s', strtotime($_POST['interval_end']) + 86400) . '"';
         }
 
         $html = '';
@@ -241,6 +249,14 @@ class Call_Stats_View {
         $html .= '<div class="clearfix"></div>';
         $html .= '<div class="peroid">' . $this->getTextfield('min_minutes', 'Samtalstid längre än') . '<span class="desc">ange i hela minuter</span></div>';
         $html .= '<div class="peroid">' . $this->getTextfield('max_minutes', 'Samtalstid kortare än') . '<span class="desc">ange i hela minuter</span></div>';
+        $html .= '<div class="interval">
+                    <label>Interval</label>
+                    <div class="input-daterange">'
+                    . $this->getTextfield('interval_start', '') .
+                    '<span class="add-on">to</span>'
+                    . $this->getTextfield('interval_end', '') .
+                    '</div>
+                  </div>';
         $html .= '</fieldset>';
 
         $html .= '<input class="btn btn-primary" type="submit" value="Hämta">';
@@ -254,7 +270,9 @@ class Call_Stats_View {
     private function getTextfield($name, $label, $required = FALSE) {
         $html = '';
         $id = "call-" . str_replace('_', '-', $name);
-        $html .= '<label for="' . $id . '">' . $label . ($required ? '<span class="required">*</span>' : '') . '</label>';
+        if (!empty($label)) {
+          $html .= '<label for="' . $id . '">' . $label . ($required ? '<span class="required">*</span>' : '') . '</label>';
+        }
         $html .= '<input id="' . $id . '" type="text" name="' . $name . '" value="' . (isset($_REQUEST[$name]) ? $_REQUEST[$name] : '') . '">';
         return $html;
     }

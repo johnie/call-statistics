@@ -140,6 +140,16 @@ if (!class_exists('Call_Stats')) {
             $name = $this->_name . '-style';
             wp_register_style($name, plugins_url('style.css', __FILE__));
             wp_enqueue_style($name);
+
+            $name = $this->_name . '-datepicker';
+            wp_register_style($name, plugins_url('datepicker.css', __FILE__));
+            wp_enqueue_style($name);
+            wp_register_script($name, plugins_url('bootstrap-datepicker.js', __FILE__), array(), "1.3.0", TRUE);
+            wp_enqueue_script($name);
+
+            $name = $this->_name . '-script';
+            wp_register_script($name, plugins_url('script.js', __FILE__), array(), "1.0.0", TRUE);
+            wp_enqueue_script($name);
         }
 
         /* end of event handlers */
