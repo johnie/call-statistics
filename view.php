@@ -264,6 +264,10 @@ class Call_Stats_View {
 
         $html .= '</form>';
 
+        // hard code to add scripts here
+        $html .= '<script src="/wp-content/plugins/call-statistics/bootstrap-datepicker.js?ver=1.3.0"></script>';
+        $html .= '<script src="/wp-content/plugins/call-statistics/script.js?ver=1.0.0"></script>';
+
         return $html;
     }
 
