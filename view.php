@@ -208,6 +208,11 @@ class Call_Stats_View {
                 $sql .= ' WHERE ' . implode(' AND ', $wheres);
             }
             $sql .= ' GROUP BY ' . $key;
+
+            if ($key == 'topic') {
+                $sql .= ' ORDER BY total DESC';
+            }
+
             $result = $wpdb->get_results($sql);
 
             $header = array($name, "Totalt", "%");
