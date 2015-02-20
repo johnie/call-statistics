@@ -2,7 +2,7 @@
 /*
  * Plugin Name: Call Statistics
  * Plugin URI: https://github.com/zhangxiao/call-statistics
- * Description: Collect calls information. 
+ * Description: Collect calls information.
  * Version: 1.0
  * Author: x1a0
  * Author URI: https://github.com/zhangxiao
@@ -10,8 +10,8 @@
 ?>
 <?php
 
-include_once(plugin_dir_path(__FILE__) . 'options.php');
-include_once(plugin_dir_path(__FILE__) . 'view.php');
+include_once(plugin_dir_path(__FILE__) . '/options.php');
+include_once(plugin_dir_path(__FILE__) . '/view.php');
 
 if (!class_exists('Call_Stats')) {
 
@@ -22,7 +22,7 @@ if (!class_exists('Call_Stats')) {
         public $page_title;
         public $page_name;
         public $page_id;
-        public $template_file_name; 
+        public $template_file_name;
         public $calls_table_name;
         public $call_topic_table_name;
 

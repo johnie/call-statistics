@@ -1,4 +1,8 @@
-<?php get_header(); ?>
+<?php
+  /**
+   * Template Name: RKUF
+   */
+?><?php get_header(); ?>
 <div id="content" class="type-b">
 	<div id="col-sup">
 		<?php if($rkuf->has_submenu("back=1")): ?>

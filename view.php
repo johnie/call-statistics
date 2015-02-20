@@ -34,7 +34,7 @@ class Call_Stats_View {
         // minutes
         $html .= $this->getTextfield('minutes', 'Samtalslängd (minuter):', TRUE);
 
-        // gender 
+        // gender
         $options = get_option($this->setup->_name . '_gender_options');
         $html .= $this->getSelect('gender', 'Kön:', array_combine($options, $options));
 
@@ -91,7 +91,7 @@ class Call_Stats_View {
             $html .= '<option value="' . $month. '" ' . selected($month, isset($_GET['month']) ? $_GET['month'] : $cur_month, FALSE) . '>' . $month . '</option>';
         }
         $html .= '</select>';
-        $html .= '<input type="hidden" name="page_id" value="' . $_GET['page_id'] . '">';
+        //$html .= '<input type="hidden" name="page_id" value="' . $_GET['page_id'] . '">';
         $html .= '<input type="hidden" name="list" value="' . $_GET['list'] . '">';
         $html .= '<input type="submit" class="btn btn-primary" value="Byt">';
         $html .= '<a href="' . get_page_link($this->setup->page_id) . '" class="btn btn-cancel">Tillbaka</a>';
