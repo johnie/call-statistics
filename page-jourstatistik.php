@@ -36,9 +36,9 @@ get_header(); ?>
         <!-- call stats content -->
         <?php global $call_statistics; ?>
         <?php if ($call_statistics): ?>
-            <?php if (isset($_GET["stats"]) && $_GET["stats"] == "1" && is_super_admin()): ?>
+            <?php if (isset($_GET["stats"]) && $_GET["stats"] == "1" && current_user_can('manage_options')): ?>
                 <?php echo $call_statistics->view->getStatsHTML(); ?>
-            <?php elseif (isset($_GET["list"]) && $_GET["list"] == "1" && is_super_admin()): ?>
+            <?php elseif (isset($_GET["list"]) && $_GET["list"] == "1" && current_user_can('manage_options')): ?>
                 <?php echo $call_statistics->view->getListHTML(); ?>
             <?php else: ?>
                 <?php echo $call_statistics->view->getFormHTML(); ?>

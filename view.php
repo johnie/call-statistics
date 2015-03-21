@@ -13,7 +13,7 @@ class Call_Stats_View {
     public function getFormHTML() {
         $html = '';
 
-        if (is_super_admin()) {
+        if (current_user_can('manage_options')) {
             $permalink = get_permalink();
             $glue = strstr($permalink, '?') === FALSE ? '?' : '&';
             $html .= '<div class="super-admin-op">';
